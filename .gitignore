@@ -1,0 +1,56 @@
+# ==========================
+# Quartus Prime build outputs
+# ==========================
+
+# Compilation databases
+db/
+incremental_db/
+greybox_tmp/
+
+# Report files
+*.rpt
+*.smsg
+*.summary
+*.done
+
+# Programming files (large, regenerable)
+*.sof
+*.pof
+*.jdi
+*.jditmp
+*.pin
+*.sld
+
+# Pin model dump
+c5_pin_model_dump.txt
+
+# Assignment defaults (auto-generated)
+*_assignment_defaults.qdf
+
+# SignalTap data (capture files, not the .stp config)
+*.stp_session/
+
+# Quartus temporary files
+*.bak
+*.qws
+*.orig
+qdb/
+tmp-clearbox/
+*.log
+
+# ==========================
+# ModelSim / QuestaSim
+# ==========================
+work/
+transcript
+vsim.wlf
+*.wlf
+*.vstf
+modelsim.ini
+
+# ==========================
+# OS junk
+# ==========================
+Thumbs.db
+Desktop.ini
+.DS_Store
