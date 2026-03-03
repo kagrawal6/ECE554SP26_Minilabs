@@ -245,10 +245,15 @@ wire								Read;
 reg		    [11:0]			rCCD_DATA;
 reg								rCCD_LVAL;
 reg								rCCD_FVAL;
-wire	       [11:0]			sCCD_R;
-wire	       [11:0]			sCCD_G;
-wire	       [11:0]			sCCD_B;
-wire								sCCD_DVAL;
+wire	       [11:0]			sCCD_R_rgb;
+wire	       [11:0]			sCCD_G_rgb;
+wire	       [11:0]			sCCD_B_rgb;
+wire								sCCD_DVAL_rgb;
+
+wire	       [11:0]			sCCD_R_gray;
+wire	       [11:0]			sCCD_G_gray;
+wire	       [11:0]			sCCD_B_gray;
+wire								sCCD_DVAL_gray;
 
 wire								sdram_ctrl_clk;
 wire	       [9:0]			oVGA_R;   				//	VGA Red[9:0]
@@ -309,20 +314,35 @@ CCD_Capture			u3	(
 							.iCLK(~D5M_PIXLCLK),
 							.iRST(DLY_RST_2)
 						   );
-//D5M raw date convert to RGB data
 
+//D5M raw date convert to RGB data
 RAW2RGB				u4	(	
 							.iCLK(D5M_PIXLCLK),
 							.iRST(DLY_RST_1),
 							.iDATA(mCCD_DATA),
 							.iDVAL(mCCD_DVAL),
-							.oRed(sCCD_R),
-							.oGreen(sCCD_G),
-							.oBlue(sCCD_B),
-							.oDVAL(sCCD_DVAL),
+							.oRed(sCCD_R_rgb),
+							.oGreen(sCCD_G_rgb),
+							.oBlue(sCCD_B_rgb),
+							.oDVAL(sCCD_DVAL_rgb),
 							.iX_Cont(X_Cont),
 							.iY_Cont(Y_Cont)
 						   );
+
+// image processing module.
+conv2d u9 (
+	.iCLK(D5M_PIXLCLK),
+	.iRST(DLY_RST_1),
+	.iDATA(mCCD_DATA),
+	.iDVAL(mCCD_DVAL),
+	.oRed(sCCD_R_gray),
+	.oGreen(sCCD_G_gray),
+	.oBlue(sCCD_B_gray),
+	.oDVAL(sCCD_DVAL_gray),
+	.iX_Cont(X_Cont),
+	.iY_Cont(Y_Cont),
+	.iMode(SW[3:2])
+);
 
 //Frame count display
 SEG7_LUT_6 			u5	(	
@@ -350,8 +370,8 @@ Sdram_Control	   u7	(	//	HOST Side
 							.CLK(sdram_ctrl_clk),
 
 							//	FIFO Write Side 1
-							.WR1_DATA({1'b0,sCCD_G[11:7],sCCD_B[11:2]}),
-							.WR1(sCCD_DVAL),
+							.WR1_DATA(SW[1] ? {1'b0,sCCD_G_gray[11:7],sCCD_B_gray[11:2]} : {1'b0,sCCD_G_rgb[11:7],sCCD_B_rgb[11:2]}),
+							.WR1(SW[1] ? sCCD_DVAL_gray : sCCD_DVAL_rgb),
 							.WR1_ADDR(0),
                      .WR1_MAX_ADDR(640*480),
 						   .WR1_LENGTH(8'h50),
@@ -359,8 +379,8 @@ Sdram_Control	   u7	(	//	HOST Side
 							.WR1_CLK(~D5M_PIXLCLK),
 
 							//	FIFO Write Side 2
-							.WR2_DATA({1'b0,sCCD_G[6:2],sCCD_R[11:2]}),
-							.WR2(sCCD_DVAL),
+							.WR2_DATA(SW[1] ? {1'b0,sCCD_G_gray[6:2],sCCD_R_gray[11:2]} : {1'b0,sCCD_G_rgb[6:2],sCCD_R_rgb[11:2]}),
+							.WR2(SW[1] ? sCCD_DVAL_gray : sCCD_DVAL_rgb),
 							.WR2_ADDR(23'h100000),
 							.WR2_MAX_ADDR(23'h100000+640*480),
 							.WR2_LENGTH(8'h50),
